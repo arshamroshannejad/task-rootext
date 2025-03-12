@@ -1,7 +1,7 @@
 app:
   host: 0.0.0.0
   port: 8000
-  debug: true
+  debug: false
   baseAPI: /api/v1
   secret:
   AccessHourTTL: 24h
@@ -9,7 +9,7 @@ app:
   CorsMaxAge: 300
 
 postgres:
-  host:
+  host: postgres
   port: 5432
   username:
   password:
@@ -17,3 +17,8 @@ postgres:
   MaxOpenConns: 25
   MaxIdleConns: 25
   ConnMaxIdleTime: 15m
+
+redis:
+  host: redis
+  port: 6379
+  password: 

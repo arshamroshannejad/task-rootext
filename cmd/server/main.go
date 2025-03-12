@@ -14,11 +14,11 @@ import (
 func main() {
 	cfg, err := config.New()
 	if err != nil {
-		panic("Failed to initialize config variables")
+		panic(fmt.Sprintf("Failed to initialize config variables: %v", err))
 	}
 	zapLog, err := logger.New(cfg.App.Debug)
 	if err != nil {
-		panic("Failed to initialize zap logger")
+		panic(fmt.Sprintf("Failed to initialize zap logger: %v", err))
 	}
 	defer zapLog.Sync()
 	db, err := database.OpenDB(cfg)
@@ -35,7 +35,7 @@ func main() {
 	zapLog.Info("Redis connected", zap.String("Host", cfg.Redis.Host), zap.Int("Port", cfg.Redis.Port))
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", cfg.App.Host, cfg.App.Port),
-		Handler:      router.SetupRoutes(),
+		Handler:      router.SetupRoutes(db, redisDB, zapLog, cfg),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
