@@ -26,3 +26,5 @@ go.work.sum
 
 # another files
 .idea
+.air.toml
+tmp

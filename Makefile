@@ -12,3 +12,6 @@ log-postgres:
 
 log-redis:
 	docker compose logs -f redis
+
+log-migrate:
+	docker compose logs -f migrate
