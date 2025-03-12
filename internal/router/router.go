@@ -27,7 +27,7 @@ func SetupRoutes(db *sql.DB, redisDB *redis.Client, zapLogger *zap.Logger, cfg *
 	r.MethodNotAllowed(handler.HttpMethodNotAllowedHandler)
 	r.NotFound(handler.HttpRequestNotFound)
 	userRepository := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepository, zapLogger)
+	userService := service.NewUserService(userRepository, zapLogger, cfg)
 	userHandler := handler.NewUserHandler(userService)
 	apiV1Router := chi.NewRouter()
 	apiV1Router.Route("/auth", func(r chi.Router) {

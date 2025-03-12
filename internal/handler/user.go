@@ -43,7 +43,26 @@ func (u *UserHandlerImpl) RegisterHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (u *UserHandlerImpl) LoginHandler(w http.ResponseWriter, r *http.Request) {
-
+	reqBody := new(entities.UserAuthRequest)
+	if err := helpers.ReadJson(r, reqBody); err != nil {
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.M{"error": err.Error()})
+		return
+	}
+	user, err := u.UserService.GetUserByEmail(reqBody.Email)
+	if errors.Is(err, sql.ErrNoRows) {
+		helpers.WriteJson(w, http.StatusNotFound, helpers.M{"error": "user not found"})
+		return
+	}
+	if err := u.UserService.VerifyPassword(user.Password, reqBody.Password); err != nil {
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.M{"error": "wrong password"})
+		return
+	}
+	accessToken, err := u.UserService.CreateAccessToken(user.ID, user.Email)
+	if err != nil {
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.M{"error": http.StatusText(http.StatusInternalServerError)})
+		return
+	}
+	helpers.WriteJson(w, http.StatusOK, helpers.M{"access_token": accessToken})
 }
 
 func (u *UserHandlerImpl) LogoutHandler(w http.ResponseWriter, r *http.Request) {

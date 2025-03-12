@@ -16,4 +16,6 @@ type UserService interface {
 	GetUserByEmail(email string) (*model.User, error)
 	CreateUser(user *entities.UserAuthRequest) error
 	EncryptPassword(plainPass string) (string, error)
+	VerifyPassword(hashPass, plainPass string) error
+	CreateAccessToken(userID, email string) (string, error)
 }

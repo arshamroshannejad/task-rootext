@@ -1,22 +1,27 @@
 package service
 
 import (
+	"github.com/golang-jwt/jwt/v5"
+	"github/arshamroshannejad/task-rootext/config"
 	"github/arshamroshannejad/task-rootext/internal/domain"
 	"github/arshamroshannejad/task-rootext/internal/entities"
 	"github/arshamroshannejad/task-rootext/internal/model"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 type userServiceImpl struct {
 	userRepository domain.UserRepository
 	zapLogger      *zap.Logger
+	cfg            *config.Config
 }
 
-func NewUserService(userRepository domain.UserRepository, zapLogger *zap.Logger) domain.UserService {
+func NewUserService(userRepository domain.UserRepository, zapLogger *zap.Logger, cfg *config.Config) domain.UserService {
 	return &userServiceImpl{
 		userRepository: userRepository,
 		zapLogger:      zapLogger,
+		cfg:            cfg,
 	}
 }
 
@@ -53,4 +58,26 @@ func (u *userServiceImpl) EncryptPassword(plainPass string) (string, error) {
 		return "", err
 	}
 	return string(hashedPass), nil
+}
+
+func (u *userServiceImpl) VerifyPassword(hashPass, plainPass string) error {
+	if err := bcrypt.CompareHashAndPassword([]byte(hashPass), []byte(plainPass)); err != nil {
+		u.zapLogger.Error("Failed to verify user password", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (u *userServiceImpl) CreateAccessToken(userID, email string) (string, error) {
+	exp := time.Now().Add(u.cfg.App.AccessHourTTL).Unix()
+	claims := jwt.MapClaims{
+		"user_id": userID,
+		"email":   email,
+		"exp":     exp,
+	}
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(u.cfg.App.Secret))
+	if err != nil {
+		u.zapLogger.Error("Failed to create user access token", zap.Error(err))
+	}
+	return token, nil
 }
