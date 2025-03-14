@@ -2,15 +2,30 @@ package main
 
 import (
 	"fmt"
-	"github/arshamroshannejad/task-rootext/config"
-	"github/arshamroshannejad/task-rootext/internal/database"
-	"github/arshamroshannejad/task-rootext/internal/logger"
-	"github/arshamroshannejad/task-rootext/internal/router"
+	"github.com/arshamroshannejad/task-rootext/config"
+	"github.com/arshamroshannejad/task-rootext/internal/database"
+	"github.com/arshamroshannejad/task-rootext/internal/logger"
+	"github.com/arshamroshannejad/task-rootext/internal/router"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
 
+//	@title						task-rootext
+//	@version					0.1.0
+//	@host						localhost:8000
+//	@description				API like reddit application
+//	@termsOfService				http://swagger.io/terms/
+//	@termsOfService				http://swagger.io/terms/
+//	@contact.name				Arsham Roshannejad
+//	@contact.url				arshamroshannejad.ir
+//	@contact.email				arshamdev2001@gmail.com
+//	@license.name				MIT
+//	@license.url				https://www.mit.edu/~amini/LICENSE.md
+//	@BasePath					/api/v1
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
 func main() {
 	cfg, err := config.New()
 	if err != nil {

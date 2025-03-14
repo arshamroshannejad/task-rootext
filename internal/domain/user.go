@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"github/arshamroshannejad/task-rootext/internal/entities"
-	"github/arshamroshannejad/task-rootext/internal/model"
+	"github.com/arshamroshannejad/task-rootext/internal/entities"
+	"github.com/arshamroshannejad/task-rootext/internal/model"
 )
 
 type UserRepository interface {

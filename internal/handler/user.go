@@ -3,9 +3,9 @@ package handler
 import (
 	"database/sql"
 	"errors"
-	"github/arshamroshannejad/task-rootext/internal/domain"
-	"github/arshamroshannejad/task-rootext/internal/entities"
-	"github/arshamroshannejad/task-rootext/internal/helpers"
+	"github.com/arshamroshannejad/task-rootext/internal/domain"
+	"github.com/arshamroshannejad/task-rootext/internal/entities"
+	"github.com/arshamroshannejad/task-rootext/internal/helpers"
 	"net/http"
 )
 
@@ -19,6 +19,19 @@ func NewUserHandler(userService domain.UserService) *UserHandlerImpl {
 	}
 }
 
+// RegisterHandler godoc
+//
+//	@Summary		Register
+//	@Description	Register a new user
+//	@Accept			json
+//	@Produce		json
+//	@Tags			Auth
+//	@Param			registerRequest	body		entities.UserAuthRequest	true	"make sure send a valid email and password must be grater than 8 character"
+//	@Success		201				{object}	helpers.UserCreated
+//	@Failure		400				{object}	helpers.BadRequest
+//	@Failure		409				{object}	helpers.UserExists
+//	@Failure		500				{object}	helpers.InternalServerError
+//	@Router			/auth/register [post]
 func (u *UserHandlerImpl) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	reqBody := new(entities.UserAuthRequest)
 	if err := helpers.ReadJson(r, reqBody); err != nil {
@@ -42,6 +55,19 @@ func (u *UserHandlerImpl) RegisterHandler(w http.ResponseWriter, r *http.Request
 	helpers.WriteJson(w, http.StatusCreated, helpers.M{"response": "user created"})
 }
 
+// LoginHandler godoc
+//
+//	@Summary		Login
+//	@Description	Login with register credential
+//	@Accept			json
+//	@Produce		json
+//	@Tags			Auth
+//	@Param			loginRequest	body		entities.UserAuthRequest	true	"make sure send a valid email and password must be grater than 8 character"
+//	@Success		200				{object}	helpers.LoginOk
+//	@Failure		400				{object}	helpers.BadRequest
+//	@Failure		404				{object}	helpers.UserNotFound
+//	@Failure		500				{object}	helpers.InternalServerError
+//	@Router			/auth/login [post]
 func (u *UserHandlerImpl) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	reqBody := new(entities.UserAuthRequest)
 	if err := helpers.ReadJson(r, reqBody); err != nil {
@@ -65,6 +91,17 @@ func (u *UserHandlerImpl) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	helpers.WriteJson(w, http.StatusOK, helpers.M{"access_token": accessToken})
 }
 
+// LogoutHandler godoc
+//
+//	@Summary		Logout
+//	@Description	Logout and expire jwt token. authenticate required!
+//	@Accept			json
+//	@Produce		json
+//	@Tags			Auth
+//	@Security		BearerAuth
+//	@Success		200	{object}	helpers.LogoutOk
+//	@Failure		500	{object}	helpers.InternalServerError
+//	@Router			/auth/logout [post]
 func (u *UserHandlerImpl) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	tokenString := r.Header.Get("Authorization")
 	exp := r.Context().Value("exp").(float64)

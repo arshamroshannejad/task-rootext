@@ -1,8 +1,8 @@
 package middleware
 
 import (
+	"github.com/arshamroshannejad/task-rootext/config"
 	"github.com/go-chi/cors"
-	"github/arshamroshannejad/task-rootext/config"
 	"net/http"
 )
 

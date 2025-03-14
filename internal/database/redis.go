@@ -3,8 +3,8 @@ package database
 import (
 	"context"
 	"fmt"
+	"github.com/arshamroshannejad/task-rootext/config"
 	"github.com/redis/go-redis/v9"
-	"github/arshamroshannejad/task-rootext/config"
 )
 
 func OpenRedis(cfg *config.Config) (*redis.Client, error) {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/arshamroshannejad/task-rootext/config"
 	_ "github.com/lib/pq"
-	"github/arshamroshannejad/task-rootext/config"
 	"time"
 )
 

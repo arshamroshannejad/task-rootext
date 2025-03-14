@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github/arshamroshannejad/task-rootext/internal/domain"
-	"github/arshamroshannejad/task-rootext/internal/entities"
-	"github/arshamroshannejad/task-rootext/internal/model"
+	"github.com/arshamroshannejad/task-rootext/internal/domain"
+	"github.com/arshamroshannejad/task-rootext/internal/entities"
+	"github.com/arshamroshannejad/task-rootext/internal/model"
 	"time"
 )
 

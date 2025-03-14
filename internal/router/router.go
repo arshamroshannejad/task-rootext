@@ -2,14 +2,16 @@ package router
 
 import (
 	"database/sql"
+	_ "github.com/arshamroshannejad/task-rootext/api"
+	"github.com/arshamroshannejad/task-rootext/config"
+	"github.com/arshamroshannejad/task-rootext/internal/handler"
+	"github.com/arshamroshannejad/task-rootext/internal/middleware"
+	"github.com/arshamroshannejad/task-rootext/internal/repository"
+	"github.com/arshamroshannejad/task-rootext/internal/service"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/redis/go-redis/v9"
-	"github/arshamroshannejad/task-rootext/config"
-	"github/arshamroshannejad/task-rootext/internal/handler"
-	"github/arshamroshannejad/task-rootext/internal/middleware"
-	"github/arshamroshannejad/task-rootext/internal/repository"
-	"github/arshamroshannejad/task-rootext/internal/service"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
@@ -26,6 +28,12 @@ func SetupRoutes(db *sql.DB, redisDB *redis.Client, zapLogger *zap.Logger, cfg *
 	r.Use(middleware.CorsMiddleware(cfg))
 	r.MethodNotAllowed(handler.HttpMethodNotAllowedHandler)
 	r.NotFound(handler.HttpRequestNotFound)
+	r.Handle("/docs/*", httpSwagger.Handler(
+		httpSwagger.URL("doc.json"),
+		httpSwagger.DeepLinking(true),
+		httpSwagger.DocExpansion("none"),
+		httpSwagger.DomID("swagger-ui"),
+	))
 	userRepository := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepository, redisDB, zapLogger, cfg)
 	userHandler := handler.NewUserHandler(userService)

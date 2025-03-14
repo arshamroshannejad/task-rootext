@@ -45,11 +45,11 @@ func (p *PaginateFilter) SortDirection() string {
 }
 
 type Metadata struct {
-	CurrentPage  int `json:"current_page,omitempty"`
-	PageSize     int `json:"page_size,omitempty"`
-	FirstPage    int `json:"first_page,omitempty"`
-	LastPage     int `json:"last_page,omitempty"`
-	TotalRecords int `json:"total_records,omitempty"`
+	CurrentPage  int `json:"current_page,omitempty" example:"3"`
+	PageSize     int `json:"page_size,omitempty" example:"2"`
+	FirstPage    int `json:"first_page,omitempty" example:"1"`
+	LastPage     int `json:"last_page,omitempty" example:"12"`
+	TotalRecords int `json:"total_records,omitempty" example:"1200"`
 }
 
 func CalculateMetadata(totalRecords, page, pageSize int) Metadata {

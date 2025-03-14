@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github/arshamroshannejad/task-rootext/internal/domain"
-	"github/arshamroshannejad/task-rootext/internal/entities"
-	"github/arshamroshannejad/task-rootext/internal/helpers"
-	"github/arshamroshannejad/task-rootext/internal/model"
+	"github.com/arshamroshannejad/task-rootext/internal/domain"
+	"github.com/arshamroshannejad/task-rootext/internal/entities"
+	"github.com/arshamroshannejad/task-rootext/internal/helpers"
+	"github.com/arshamroshannejad/task-rootext/internal/model"
 	"time"
 )
 

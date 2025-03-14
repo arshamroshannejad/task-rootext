@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github/arshamroshannejad/task-rootext/internal/helpers"
+	"github.com/arshamroshannejad/task-rootext/internal/helpers"
 	"net/http"
 )
 
