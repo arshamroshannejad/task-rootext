@@ -67,13 +67,18 @@ func (p *PostHandlerImpl) UpdatePostHandler(w http.ResponseWriter, r *http.Reque
 		helpers.WriteJson(w, http.StatusBadRequest, helpers.M{"error": err.Error()})
 		return
 	}
-	if _, err := p.PostService.GetPostByID(postID); err != nil {
+	post, err := p.PostService.GetPostByID(postID)
+	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			helpers.WriteJson(w, http.StatusNotFound, helpers.M{"error": "post not found"})
 		default:
 			helpers.WriteJson(w, http.StatusInternalServerError, helpers.M{"error": http.StatusText(http.StatusInternalServerError)})
 		}
+		return
+	}
+	if post.UserID != userID {
+		helpers.WriteJson(w, http.StatusForbidden, helpers.M{"error": http.StatusText(http.StatusForbidden)})
 		return
 	}
 	updatedPost, err := p.PostService.UpdatePost(reqBody, userID)
@@ -85,14 +90,20 @@ func (p *PostHandlerImpl) UpdatePostHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (p *PostHandlerImpl) DeletePostHandler(w http.ResponseWriter, r *http.Request) {
+	userID := helpers.GetUserID(r)
 	postID := chi.URLParam(r, "id")
-	if _, err := p.PostService.GetPostByID(postID); err != nil {
+	post, err := p.PostService.GetPostByID(postID)
+	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			helpers.WriteJson(w, http.StatusNotFound, helpers.M{"error": "post not found"})
 		default:
 			helpers.WriteJson(w, http.StatusInternalServerError, helpers.M{"error": http.StatusText(http.StatusInternalServerError)})
 		}
+		return
+	}
+	if post.UserID != userID {
+		helpers.WriteJson(w, http.StatusForbidden, helpers.M{"error": http.StatusText(http.StatusForbidden)})
 		return
 	}
 	if err := p.PostService.DeletePost(postID); err != nil {
