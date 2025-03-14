@@ -1,0 +1,533 @@
+basePath: /api/v1
+definitions:
+  github_com_arshamroshannejad_task-rootext_internal_entities.PostCreateUpdateRequest:
+    properties:
+      text:
+        example: Content of my new post.
+        type: string
+      title:
+        example: My New Post
+        type: string
+    required:
+    - text
+    - title
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_entities.UserAuthRequest:
+    properties:
+      email:
+        example: james@gmail.com
+        type: string
+      password:
+        example: 1qaz2wsx
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_entities.VoteRequest:
+    properties:
+      value:
+        enum:
+        - "1"
+        - "-1"
+        example: "-1"
+        type: string
+    required:
+    - value
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.AllPosts:
+    properties:
+      metadata:
+        $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.Metadata'
+      posts:
+        items:
+          $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_model.Post'
+        type: array
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.BadRequest:
+    properties:
+      error:
+        example: bad request
+        type: string
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.Forbidden:
+    properties:
+      error:
+        example: Forbidden
+        type: string
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError:
+    properties:
+      error:
+        example: Internal Server Error
+        type: string
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.LoginOk:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.LogoutOk:
+    properties:
+      response:
+        example: logged out
+        type: string
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.Metadata:
+    properties:
+      current_page:
+        example: 3
+        type: integer
+      first_page:
+        example: 1
+        type: integer
+      last_page:
+        example: 12
+        type: integer
+      page_size:
+        example: 2
+        type: integer
+      total_records:
+        example: 1200
+        type: integer
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.Post:
+    properties:
+      created_at:
+        example: "2023-10-27T10:00:00Z"
+        type: string
+      id:
+        example: "1"
+        type: string
+      text:
+        example: This is the content of my first post.
+        type: string
+      title:
+        example: My First Post
+        type: string
+      updated_at:
+        example: "2023-10-27T10:30:00Z"
+        type: string
+      user_id:
+        example: "123"
+        type: string
+      vote_count:
+        example: 100
+        type: integer
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.PostNotFound:
+    properties:
+      error:
+        example: post not found
+        type: string
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.UserCreated:
+    properties:
+      response:
+        example: user created
+        type: string
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.UserExists:
+    properties:
+      error:
+        example: user already exists
+        type: string
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.UserNotFound:
+    properties:
+      error:
+        example: user not found
+        type: string
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_helpers.VoteSuccessful:
+    properties:
+      response:
+        example: successful
+        type: string
+    type: object
+  github_com_arshamroshannejad_task-rootext_internal_model.Post:
+    properties:
+      created_at:
+        example: "2023-10-27T10:00:00Z"
+        type: string
+      id:
+        example: "1"
+        type: string
+      text:
+        example: This is the content of my first post.
+        type: string
+      title:
+        example: My First Post
+        type: string
+      updated_at:
+        example: "2023-10-27T10:30:00Z"
+        type: string
+      user_id:
+        example: "123"
+        type: string
+      vote_count:
+        example: 100
+        type: integer
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: arshamdev2001@gmail.com
+    name: Arsham Roshannejad
+    url: arshamroshannejad.ir
+  description: API like reddit application
+  license:
+    name: MIT
+    url: https://www.mit.edu/~amini/LICENSE.md
+  termsOfService: http://swagger.io/terms/
+  title: task-rootext
+  version: 0.1.0
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with register credential
+      parameters:
+      - description: make sure send a valid email and password must be grater than
+          8 character
+        in: body
+        name: loginRequest
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_entities.UserAuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.LoginOk'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.BadRequest'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.UserNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError'
+      summary: Login
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout and expire jwt token. authenticate required!
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.LogoutOk'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError'
+      security:
+      - BearerAuth: []
+      summary: Logout
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: make sure send a valid email and password must be grater than
+          8 character
+        in: body
+        name: registerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_entities.UserAuthRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.UserCreated'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.BadRequest'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.UserExists'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError'
+      summary: Register
+      tags:
+      - Auth
+  /post:
+    get:
+      consumes:
+      - application/json
+      description: this endpoint provide all posts. also (pagination, sort, order)
+        is available.
+      parameters:
+      - default: 1
+        example: 1
+        in: query
+        name: page
+        type: integer
+      - default: 5
+        example: 3
+        in: query
+        name: page_size
+        type: integer
+      - default: -vote_count
+        example: created_at -created_at vote_count -vote_count
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.AllPosts'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.BadRequest'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError'
+      summary: Get All Posts
+      tags:
+      - Posts
+    post:
+      consumes:
+      - application/json
+      description: Create a new post with the provided data
+      parameters:
+      - description: just send title and text. authenticated required!
+        in: body
+        name: postBody
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_entities.PostCreateUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.Post'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.BadRequest'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError'
+      security:
+      - BearerAuth: []
+      summary: Create a new post
+      tags:
+      - Posts
+  /post/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a post by ID. authenticated required!
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.Forbidden'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.PostNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError'
+      security:
+      - BearerAuth: []
+      summary: Delete a post
+      tags:
+      - Posts
+    get:
+      consumes:
+      - application/json
+      description: Get a sing post with id
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.Post'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.PostNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError'
+      summary: Get a single post
+      tags:
+      - Posts
+    put:
+      consumes:
+      - application/json
+      description: Update a post with the provided ID and data
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: just send title and text. authenticated required!
+        in: body
+        name: postBody
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_entities.PostCreateUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.Post'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.BadRequest'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.Forbidden'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.PostNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError'
+      security:
+      - BearerAuth: []
+      summary: Update an existing post
+      tags:
+      - Posts
+  /post/{id}/vote:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a vote for a post by ID. authenticated required!
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.PostNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError'
+      security:
+      - BearerAuth: []
+      summary: Remove a vote from a post
+      tags:
+      - Posts
+    post:
+      consumes:
+      - application/json
+      description: Add a vote for a post by ID. authenticated required!
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: value must 1 or -1
+        in: body
+        name: voteBody
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_entities.VoteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.VoteSuccessful'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.BadRequest'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.Forbidden'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.PostNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_arshamroshannejad_task-rootext_internal_helpers.InternalServerError'
+      security:
+      - BearerAuth: []
+      summary: Add a vote to a post
+      tags:
+      - Posts
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
