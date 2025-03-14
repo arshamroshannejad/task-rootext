@@ -3,6 +3,7 @@ package service
 import (
 	"github/arshamroshannejad/task-rootext/internal/domain"
 	"github/arshamroshannejad/task-rootext/internal/entities"
+	"github/arshamroshannejad/task-rootext/internal/helpers"
 	"github/arshamroshannejad/task-rootext/internal/model"
 	"go.uber.org/zap"
 )
@@ -19,23 +20,24 @@ func NewPostService(postRepository domain.PostRepository, zapLogger *zap.Logger)
 	}
 }
 
-func (p *postServiceImpl) GetAllPosts() (*[]model.Post, error) {
-	posts, err := p.postRepository.GetAll()
+func (p *postServiceImpl) GetAllPosts(filter *helpers.PaginateFilter) (*[]model.Post, helpers.Metadata, error) {
+	posts, metaData, err := p.postRepository.GetAll(filter)
 	if err != nil {
 		p.zapLogger.Error("Failed to get all posts", zap.Error(err))
-		return nil, err
+		return nil, helpers.Metadata{}, err
 	}
-	return posts, err
+	return posts, metaData, err
 }
 
-func (p *postServiceImpl) GetPostByID(id string) (*model.Post, error) {
-	post, err := p.postRepository.GetByID(id)
+func (p *postServiceImpl) GetPostByID(postID string) (*model.Post, error) {
+	post, err := p.postRepository.GetByID(postID)
 	if err != nil {
 		p.zapLogger.Error("Failed to get post with id", zap.Error(err))
 		return nil, err
 	}
 	return post, err
 }
+
 func (p *postServiceImpl) GetPostByTitle(title string) (*model.Post, error) {
 	post, err := p.postRepository.GetByTitle(title)
 	if err != nil {
@@ -54,8 +56,8 @@ func (p *postServiceImpl) CreatePost(post *entities.PostCreateUpdateRequest, use
 	return createdPost, nil
 }
 
-func (p *postServiceImpl) UpdatePost(post *entities.PostCreateUpdateRequest, userID string) (*model.Post, error) {
-	updatedPost, err := p.postRepository.Update(post, userID)
+func (p *postServiceImpl) UpdatePost(post *entities.PostCreateUpdateRequest, postID string) (*model.Post, error) {
+	updatedPost, err := p.postRepository.Update(post, postID)
 	if err != nil {
 		p.zapLogger.Error("Failed to update post", zap.Error(err))
 		return nil, err
@@ -63,8 +65,8 @@ func (p *postServiceImpl) UpdatePost(post *entities.PostCreateUpdateRequest, use
 	return updatedPost, nil
 }
 
-func (p *postServiceImpl) DeletePost(id string) error {
-	err := p.postRepository.Delete(id)
+func (p *postServiceImpl) DeletePost(postID string) error {
+	err := p.postRepository.Delete(postID)
 	if err != nil {
 		p.zapLogger.Error("Failed to delete post")
 		return err

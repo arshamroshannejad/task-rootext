@@ -3,8 +3,10 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github/arshamroshannejad/task-rootext/internal/domain"
 	"github/arshamroshannejad/task-rootext/internal/entities"
+	"github/arshamroshannejad/task-rootext/internal/helpers"
 	"github/arshamroshannejad/task-rootext/internal/model"
 	"time"
 )
@@ -19,36 +21,65 @@ func NewPostRepository(db *sql.DB) domain.PostRepository {
 	}
 }
 
-func (p *postRepositoryImpl) GetAll() (*[]model.Post, error) {
-	query := `
-                SELECT 
-                    p.id, p.title, p.text, p.created_at, p.updated_at, p.user_id, COALESCE(SUM(v.vote), 0) as vote_count
-                FROM posts p
-                LEFT JOIN votes v ON p.id = v.post_id
-                GROUP BY p.id
-        `
+func (p *postRepositoryImpl) GetAll(filter *helpers.PaginateFilter) (*[]model.Post, helpers.Metadata, error) {
+	query := fmt.Sprintf(
+		`
+			SELECT 
+				COUNT(*) OVER() AS total_records,
+				p.id, 
+				p.title, 
+				p.text, 
+				p.created_at, 
+				p.updated_at, 
+				p.user_id, 
+				COALESCE(SUM(v.vote), 0) AS vote_count
+			FROM 
+				posts p
+			LEFT JOIN 
+				votes v ON p.id = v.post_id
+			GROUP BY 
+				p.id
+			ORDER BY 
+				%s %s
+			LIMIT
+				$1 
+			OFFSET 
+				$2;
+        `,
+		filter.SortValue(),
+		filter.SortDirection(),
+	)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	rows, err := p.db.QueryContext(ctx, query)
+	rows, err := p.db.QueryContext(ctx, query, filter.Limit(), filter.OffSet())
 	if err != nil {
-		return nil, err
+		return nil, helpers.Metadata{}, err
 	}
 	defer rows.Close()
-	return collectPostRows(rows)
+	return collectPostRows(rows, filter.Limit(), filter.OffSet())
 }
 
-func (p *postRepositoryImpl) GetByID(id string) (*model.Post, error) {
+func (p *postRepositoryImpl) GetByID(postID string) (*model.Post, error) {
 	query := `
-                SELECT 
-                    p.id, p.title, p.text, p.created_at, p.updated_at, p.user_id, COALESCE(SUM(v.vote), 0) as vote_count
-                FROM posts p
-                LEFT JOIN votes v ON p.id = v.post_id
-                WHERE p.id = $1
-                GROUP BY p.id
+			SELECT 
+				p.id,
+				p.title,
+				p.text,
+				p.created_at,
+				p.updated_at,
+				p.user_id,
+				COALESCE(SUM(v.vote), 0) as vote_count
+			FROM posts p
+			LEFT JOIN 
+			    votes v ON p.id = v.post_id
+			WHERE 
+			    p.id = $1
+			GROUP BY 
+			    p.id
         `
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	row := p.db.QueryRowContext(ctx, query, id)
+	row := p.db.QueryRowContext(ctx, query, postID)
 	return collectPostRow(row)
 }
 
@@ -68,7 +99,11 @@ func (p *postRepositoryImpl) GetByTitle(title string) (*model.Post, error) {
 }
 
 func (p *postRepositoryImpl) Create(post *entities.PostCreateUpdateRequest, userID string) (*model.Post, error) {
-	query := "INSERT INTO posts (title, text, user_id) VALUES ($1, $2, $3) RETURNING *"
+	query := `
+                INSERT INTO posts (title, text, user_id) 
+                VALUES ($1, $2, $3) 
+                RETURNING id, title, text, created_at, updated_at, user_id, 0 as vote_count
+        `
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	args := []any{post.Title, post.Text, userID}
@@ -79,11 +114,16 @@ func (p *postRepositoryImpl) Create(post *entities.PostCreateUpdateRequest, user
 	return collectPostRow(row)
 }
 
-func (p *postRepositoryImpl) Update(post *entities.PostCreateUpdateRequest, userID string) (*model.Post, error) {
-	query := "UPDATE posts SET title = $1, text = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *"
+func (p *postRepositoryImpl) Update(post *entities.PostCreateUpdateRequest, postID string) (*model.Post, error) {
+	query := `
+                UPDATE posts 
+                SET title = $1, text = $2, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = $3 
+                RETURNING id, title, text, created_at, updated_at, user_id, 0 as vote_count
+        `
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	args := []any{post.Title, post.Text, userID}
+	args := []any{post.Title, post.Text, postID}
 	row := p.db.QueryRowContext(ctx, query, args...)
 	if row.Err() != nil {
 		return nil, row.Err()
@@ -91,11 +131,11 @@ func (p *postRepositoryImpl) Update(post *entities.PostCreateUpdateRequest, user
 	return collectPostRow(row)
 }
 
-func (p *postRepositoryImpl) Delete(id string) error {
+func (p *postRepositoryImpl) Delete(postID string) error {
 	query := "DELETE FROM posts WHERE id = $1"
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	_, err := p.db.ExecContext(ctx, query, id)
+	_, err := p.db.ExecContext(ctx, query, postID)
 	return err
 }
 
@@ -117,11 +157,13 @@ func (p *postRepositoryImpl) RemoveVote(postID, userID string) error {
 	return err
 }
 
-func collectPostRows(rows *sql.Rows) (*[]model.Post, error) {
+func collectPostRows(rows *sql.Rows, limit, offset int) (*[]model.Post, helpers.Metadata, error) {
 	var posts []model.Post
+	var totalRecords int
 	for rows.Next() {
 		var post model.Post
 		err := rows.Scan(
+			&totalRecords,
 			&post.ID,
 			&post.Title,
 			&post.Text,
@@ -131,14 +173,15 @@ func collectPostRows(rows *sql.Rows) (*[]model.Post, error) {
 			&post.VoteCount,
 		)
 		if err != nil {
-			return nil, err
+			return nil, helpers.Metadata{}, err
 		}
 		posts = append(posts, post)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, helpers.Metadata{}, err
 	}
-	return &posts, nil
+	metadata := helpers.CalculateMetadata(totalRecords, offset, limit)
+	return &posts, metadata, nil
 }
 
 func collectPostRow(row *sql.Row) (*model.Post, error) {

@@ -21,12 +21,23 @@ func NewPostHandler(postService domain.PostService) *PostHandlerImpl {
 }
 
 func (p *PostHandlerImpl) GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
-	posts, err := p.PostService.GetAllPosts()
+	var filter helpers.PaginateFilter
+	v := helpers.NewValidator()
+	qs := r.URL.Query()
+	filter.Page = v.ReadQsInt(qs, "page", 1)
+	filter.PageSize = v.ReadQsInt(qs, "page_size", 5)
+	filter.Sort = v.ReadQsString(qs, "sort", "-created_at")
+	filter.SortSafeList = []string{"created_at", "-created_at", "vote_count", "-vote_count"}
+	if filter.Validate(v); !v.IsValid() {
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.M{"error": v.Errors})
+		return
+	}
+	posts, metaData, err := p.PostService.GetAllPosts(&filter)
 	if err != nil {
 		helpers.WriteJson(w, http.StatusInternalServerError, helpers.M{"error": http.StatusText(http.StatusInternalServerError)})
 		return
 	}
-	helpers.WriteJson(w, http.StatusOK, posts)
+	helpers.WriteJson(w, http.StatusOK, helpers.M{"metadata": metaData, "posts": posts})
 }
 
 func (p *PostHandlerImpl) GetPostHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +92,7 @@ func (p *PostHandlerImpl) UpdatePostHandler(w http.ResponseWriter, r *http.Reque
 		helpers.WriteJson(w, http.StatusForbidden, helpers.M{"error": http.StatusText(http.StatusForbidden)})
 		return
 	}
-	updatedPost, err := p.PostService.UpdatePost(reqBody, userID)
+	updatedPost, err := p.PostService.UpdatePost(reqBody, postID)
 	if err != nil {
 		helpers.WriteJson(w, http.StatusInternalServerError, helpers.M{"error": http.StatusText(http.StatusInternalServerError)})
 		return
