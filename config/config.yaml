@@ -3,7 +3,7 @@ app:
   port: 8000
   debug: false
   baseAPI: /api/v1
-  secret:
+  secret: LJbu12@344BhnVVV9kPw1
   AccessHourTTL: 24h
   CorsOrigins: [ "*" ]
   CorsMaxAge: 300
@@ -11,8 +11,8 @@ app:
 postgres:
   host: postgres
   port: 5432
-  username:
-  password:
+  username: postgres_user
+  password: postgres_password
   database: postgres
   MaxOpenConns: 25
   MaxIdleConns: 25
@@ -21,4 +21,4 @@ postgres:
 redis:
   host: redis
   port: 6379
-  password: 
+  password: redis_password
