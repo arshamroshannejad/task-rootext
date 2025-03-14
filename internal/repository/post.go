@@ -20,7 +20,13 @@ func NewPostRepository(db *sql.DB) domain.PostRepository {
 }
 
 func (p *postRepositoryImpl) GetAll() (*[]model.Post, error) {
-	query := "SELECT * FROM posts"
+	query := `
+                SELECT 
+                    p.id, p.title, p.text, p.created_at, p.updated_at, p.user_id, COALESCE(SUM(v.vote), 0) as vote_count
+                FROM posts p
+                LEFT JOIN votes v ON p.id = v.post_id
+                GROUP BY p.id
+        `
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	rows, err := p.db.QueryContext(ctx, query)
@@ -32,7 +38,14 @@ func (p *postRepositoryImpl) GetAll() (*[]model.Post, error) {
 }
 
 func (p *postRepositoryImpl) GetByID(id string) (*model.Post, error) {
-	query := "SELECT * FROM posts WHERE id = $1"
+	query := `
+                SELECT 
+                    p.id, p.title, p.text, p.created_at, p.updated_at, p.user_id, COALESCE(SUM(v.vote), 0) as vote_count
+                FROM posts p
+                LEFT JOIN votes v ON p.id = v.post_id
+                WHERE p.id = $1
+                GROUP BY p.id
+        `
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	row := p.db.QueryRowContext(ctx, query, id)
@@ -40,7 +53,14 @@ func (p *postRepositoryImpl) GetByID(id string) (*model.Post, error) {
 }
 
 func (p *postRepositoryImpl) GetByTitle(title string) (*model.Post, error) {
-	query := "SELECT * FROM posts WHERE title = $1"
+	query := `
+                SELECT 
+                    p.id, p.title, p.text, p.created_at, p.updated_at, p.user_id, COALESCE(SUM(v.vote), 0) as vote_count
+                FROM posts p
+                LEFT JOIN votes v ON p.id = v.post_id
+                WHERE p.title = $1
+                GROUP BY p.id
+        `
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	row := p.db.QueryRowContext(ctx, query, title)
@@ -108,6 +128,7 @@ func collectPostRows(rows *sql.Rows) (*[]model.Post, error) {
 			&post.CreatedAt,
 			&post.UpdatedAt,
 			&post.UserID,
+			&post.VoteCount,
 		)
 		if err != nil {
 			return nil, err
@@ -129,6 +150,7 @@ func collectPostRow(row *sql.Row) (*model.Post, error) {
 		&post.CreatedAt,
 		&post.UpdatedAt,
 		&post.UserID,
+		&post.VoteCount,
 	)
 	if err != nil {
 		return nil, err
