@@ -30,7 +30,7 @@ func SetupRoutes(db *sql.DB, redisDB *redis.Client, zapLogger *zap.Logger, cfg *
 	userService := service.NewUserService(userRepository, redisDB, zapLogger, cfg)
 	userHandler := handler.NewUserHandler(userService)
 	postRepository := repository.NewPostRepository(db)
-	postService := service.NewPostService(postRepository, zapLogger)
+	postService := service.NewPostService(postRepository, redisDB, zapLogger)
 	postHandler := handler.NewPostHandler(postService)
 	apiV1Router := chi.NewRouter()
 	apiV1Router.Route("/auth", func(r chi.Router) {

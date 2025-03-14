@@ -1,26 +1,45 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"github.com/redis/go-redis/v9"
 	"github/arshamroshannejad/task-rootext/internal/domain"
 	"github/arshamroshannejad/task-rootext/internal/entities"
 	"github/arshamroshannejad/task-rootext/internal/helpers"
 	"github/arshamroshannejad/task-rootext/internal/model"
 	"go.uber.org/zap"
+	"time"
 )
 
 type postServiceImpl struct {
 	postRepository domain.PostRepository
+	redisDB        *redis.Client
 	zapLogger      *zap.Logger
 }
 
-func NewPostService(postRepository domain.PostRepository, zapLogger *zap.Logger) domain.PostService {
+func NewPostService(postRepository domain.PostRepository, redisDB *redis.Client, zapLogger *zap.Logger) domain.PostService {
 	return &postServiceImpl{
 		postRepository: postRepository,
+		redisDB:        redisDB,
 		zapLogger:      zapLogger,
 	}
 }
 
 func (p *postServiceImpl) GetAllPosts(filter *helpers.PaginateFilter) (*[]model.Post, helpers.Metadata, error) {
+	if filter.Page == 1 && filter.Sort == "-vote_count" {
+		cachedData, err := p.redisDB.Get(context.Background(), "top_5_posts").Result()
+		if err == nil {
+			var cachedResponse struct {
+				Posts    []model.Post     `json:"posts"`
+				Metadata helpers.Metadata `json:"metadata"`
+			}
+			if err := json.Unmarshal([]byte(cachedData), &cachedResponse); err == nil {
+				p.zapLogger.Info("Serving top 5 posts from Redis cache")
+				return &cachedResponse.Posts, cachedResponse.Metadata, nil
+			}
+		}
+	}
 	posts, metaData, err := p.postRepository.GetAll(filter)
 	if err != nil {
 		p.zapLogger.Error("Failed to get all posts", zap.Error(err))
@@ -79,6 +98,7 @@ func (p *postServiceImpl) AddPostVote(postID, userID, vote string) error {
 		p.zapLogger.Error("Failed to add vote on post", zap.Error(err))
 		return err
 	}
+	go p.refreshTopVotedCache()
 	return nil
 }
 
@@ -87,5 +107,36 @@ func (p *postServiceImpl) RemovePostVote(postID, userID string) error {
 		p.zapLogger.Error("Failed to remove vote on post", zap.Error(err))
 		return err
 	}
+	go p.refreshTopVotedCache()
 	return nil
+}
+
+func (p *postServiceImpl) refreshTopVotedCache() {
+	filter := &helpers.PaginateFilter{
+		Page:         1,
+		PageSize:     5,
+		Sort:         "-vote_count",
+		SortSafeList: []string{"vote_count", "-vote_count"},
+	}
+	posts, metadata, err := p.postRepository.GetAll(filter)
+	if err != nil {
+		p.zapLogger.Error("Failed to refresh top voted cache", zap.Error(err))
+		return
+	}
+	cacheData := struct {
+		Posts    []model.Post     `json:"posts"`
+		Metadata helpers.Metadata `json:"metadata"`
+	}{
+		Posts:    *posts,
+		Metadata: metadata,
+	}
+	jsonData, err := json.Marshal(cacheData)
+	if err != nil {
+		p.zapLogger.Error("Failed to marshal cache data", zap.Error(err))
+		return
+	}
+	err = p.redisDB.Set(context.Background(), "top_5_posts", jsonData, time.Hour).Err()
+	if err != nil {
+		p.zapLogger.Error("Failed to store top voted posts in Redis", zap.Error(err))
+	}
 }
