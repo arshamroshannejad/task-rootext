@@ -66,5 +66,11 @@ func (u *UserHandlerImpl) LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserHandlerImpl) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-
+	tokenString := r.Header.Get("Authorization")
+	exp := r.Context().Value("exp").(float64)
+	if err := u.UserService.BlockJwtToken(tokenString, exp); err != nil {
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.M{"error": http.StatusText(http.StatusInternalServerError)})
+		return
+	}
+	helpers.WriteJson(w, http.StatusOK, helpers.M{"response": "logged out"})
 }

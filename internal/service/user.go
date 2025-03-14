@@ -1,7 +1,9 @@
 package service
 
 import (
+	"context"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 	"github/arshamroshannejad/task-rootext/config"
 	"github/arshamroshannejad/task-rootext/internal/domain"
 	"github/arshamroshannejad/task-rootext/internal/entities"
@@ -13,13 +15,15 @@ import (
 
 type userServiceImpl struct {
 	userRepository domain.UserRepository
+	redisDB        *redis.Client
 	zapLogger      *zap.Logger
 	cfg            *config.Config
 }
 
-func NewUserService(userRepository domain.UserRepository, zapLogger *zap.Logger, cfg *config.Config) domain.UserService {
+func NewUserService(userRepository domain.UserRepository, redisDB *redis.Client, zapLogger *zap.Logger, cfg *config.Config) domain.UserService {
 	return &userServiceImpl{
 		userRepository: userRepository,
+		redisDB:        redisDB,
 		zapLogger:      zapLogger,
 		cfg:            cfg,
 	}
@@ -80,4 +84,14 @@ func (u *userServiceImpl) CreateAccessToken(userID, email string) (string, error
 		u.zapLogger.Error("Failed to create user access token", zap.Error(err))
 	}
 	return token, nil
+}
+
+func (u *userServiceImpl) BlockJwtToken(token string, exp float64) error {
+	remaining := time.Until(time.Unix(int64(exp), 0))
+	result := u.redisDB.Set(context.Background(), token, "blocked", remaining)
+	if result.Err() != nil {
+		u.zapLogger.Error("Failed to add token in blacklist", zap.Error(result.Err()))
+		return result.Err()
+	}
+	return nil
 }

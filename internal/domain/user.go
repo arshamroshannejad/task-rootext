@@ -18,4 +18,5 @@ type UserService interface {
 	EncryptPassword(plainPass string) (string, error)
 	VerifyPassword(hashPass, plainPass string) error
 	CreateAccessToken(userID, email string) (string, error)
+	BlockJwtToken(token string, exp float64) error
 }

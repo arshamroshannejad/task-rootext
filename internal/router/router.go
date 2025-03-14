@@ -27,13 +27,16 @@ func SetupRoutes(db *sql.DB, redisDB *redis.Client, zapLogger *zap.Logger, cfg *
 	r.MethodNotAllowed(handler.HttpMethodNotAllowedHandler)
 	r.NotFound(handler.HttpRequestNotFound)
 	userRepository := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepository, zapLogger, cfg)
+	userService := service.NewUserService(userRepository, redisDB, zapLogger, cfg)
 	userHandler := handler.NewUserHandler(userService)
 	apiV1Router := chi.NewRouter()
 	apiV1Router.Route("/auth", func(r chi.Router) {
 		r.Post("/register", userHandler.RegisterHandler)
 		r.Post("/login", userHandler.LoginHandler)
-		r.Post("/logout", userHandler.LogoutHandler)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.JwtAuth(redisDB, zapLogger, cfg))
+			r.Post("/logout", userHandler.LogoutHandler)
+		})
 	})
 	r.Mount("/api/v1", apiV1Router)
 	return r
