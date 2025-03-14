@@ -112,3 +112,51 @@ func (p *PostHandlerImpl) DeletePostHandler(w http.ResponseWriter, r *http.Reque
 	}
 	helpers.WriteJson(w, http.StatusNoContent, nil)
 }
+
+func (p *PostHandlerImpl) AddPostVoteHandler(w http.ResponseWriter, r *http.Request) {
+	userID := helpers.GetUserID(r)
+	postID := chi.URLParam(r, "id")
+	reqBody := new(entities.VoteRequest)
+	if err := helpers.ReadJson(r, reqBody); err != nil {
+		helpers.WriteJson(w, http.StatusBadRequest, helpers.M{"error": err.Error()})
+		return
+	}
+	post, err := p.PostService.GetPostByID(postID)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			helpers.WriteJson(w, http.StatusNotFound, helpers.M{"error": "post not found"})
+		default:
+			helpers.WriteJson(w, http.StatusInternalServerError, helpers.M{"error": http.StatusText(http.StatusInternalServerError)})
+		}
+		return
+	}
+	if post.UserID == userID {
+		helpers.WriteJson(w, http.StatusForbidden, helpers.M{"error": http.StatusText(http.StatusForbidden)})
+		return
+	}
+	if err := p.PostService.AddPostVote(postID, userID, reqBody.Value); err != nil {
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.M{"error": http.StatusText(http.StatusInternalServerError)})
+		return
+	}
+	helpers.WriteJson(w, http.StatusOK, helpers.M{"response": "successful"})
+}
+
+func (p *PostHandlerImpl) RemovePostVoteHandler(w http.ResponseWriter, r *http.Request) {
+	userID := helpers.GetUserID(r)
+	postID := chi.URLParam(r, "id")
+	if _, err := p.PostService.GetPostByID(postID); err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			helpers.WriteJson(w, http.StatusNotFound, helpers.M{"error": "post not found"})
+		default:
+			helpers.WriteJson(w, http.StatusInternalServerError, helpers.M{"error": http.StatusText(http.StatusInternalServerError)})
+		}
+		return
+	}
+	if err := p.PostService.RemovePostVote(postID, userID); err != nil {
+		helpers.WriteJson(w, http.StatusInternalServerError, helpers.M{"error": http.StatusText(http.StatusInternalServerError)})
+		return
+	}
+	helpers.WriteJson(w, http.StatusNoContent, nil)
+}

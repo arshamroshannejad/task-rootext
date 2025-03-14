@@ -49,6 +49,8 @@ func SetupRoutes(db *sql.DB, redisDB *redis.Client, zapLogger *zap.Logger, cfg *
 			r.Post("/", postHandler.CreatePostHandler)
 			r.Put("/{id}", postHandler.UpdatePostHandler)
 			r.Delete("/{id}", postHandler.DeletePostHandler)
+			r.Post("/{id}/vote", postHandler.AddPostVoteHandler)
+			r.Delete("/{id}/unvote", postHandler.RemovePostVoteHandler)
 		})
 	})
 	r.Mount("/api/v1", apiV1Router)

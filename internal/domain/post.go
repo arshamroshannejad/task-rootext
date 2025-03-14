@@ -12,6 +12,8 @@ type PostRepository interface {
 	Create(post *entities.PostCreateUpdateRequest, userID string) (*model.Post, error)
 	Update(post *entities.PostCreateUpdateRequest, userID string) (*model.Post, error)
 	Delete(id string) error
+	AddVote(postID, userID, vote string) error
+	RemoveVote(postID, userID string) error
 }
 
 type PostService interface {
@@ -21,4 +23,6 @@ type PostService interface {
 	CreatePost(post *entities.PostCreateUpdateRequest, userID string) (*model.Post, error)
 	UpdatePost(post *entities.PostCreateUpdateRequest, userID string) (*model.Post, error)
 	DeletePost(id string) error
+	AddPostVote(postID, userID, vote string) error
+	RemovePostVote(postID, userID string) error
 }

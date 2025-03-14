@@ -79,6 +79,24 @@ func (p *postRepositoryImpl) Delete(id string) error {
 	return err
 }
 
+func (p *postRepositoryImpl) AddVote(postID, userID, vote string) error {
+	query := "INSERT INTO votes (user_id, post_id, vote) VALUES ($1, $2, $3) ON CONFLICT (user_id, post_id) DO UPDATE SET vote = $4"
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	args := []any{postID, userID, vote, vote}
+	_, err := p.db.ExecContext(ctx, query, args...)
+	return err
+}
+
+func (p *postRepositoryImpl) RemoveVote(postID, userID string) error {
+	query := "DELETE FROM votes WHERE user_id = $1 AND post_id = $2"
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	args := []any{postID, userID}
+	_, err := p.db.ExecContext(ctx, query, args...)
+	return err
+}
+
 func collectPostRows(rows *sql.Rows) (*[]model.Post, error) {
 	var posts []model.Post
 	for rows.Next() {

@@ -71,3 +71,19 @@ func (p *postServiceImpl) DeletePost(id string) error {
 	}
 	return nil
 }
+
+func (p *postServiceImpl) AddPostVote(postID, userID, vote string) error {
+	if err := p.postRepository.AddVote(postID, userID, vote); err != nil {
+		p.zapLogger.Error("Failed to add vote on post", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (p *postServiceImpl) RemovePostVote(postID, userID string) error {
+	if err := p.postRepository.RemoveVote(postID, userID); err != nil {
+		p.zapLogger.Error("Failed to remove vote on post", zap.Error(err))
+		return err
+	}
+	return nil
+}
