@@ -29,6 +29,9 @@ func SetupRoutes(db *sql.DB, redisDB *redis.Client, zapLogger *zap.Logger, cfg *
 	userRepository := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepository, redisDB, zapLogger, cfg)
 	userHandler := handler.NewUserHandler(userService)
+	postRepository := repository.NewPostRepository(db)
+	postService := service.NewPostService(postRepository, zapLogger)
+	postHandler := handler.NewPostHandler(postService)
 	apiV1Router := chi.NewRouter()
 	apiV1Router.Route("/auth", func(r chi.Router) {
 		r.Post("/register", userHandler.RegisterHandler)
@@ -36,6 +39,16 @@ func SetupRoutes(db *sql.DB, redisDB *redis.Client, zapLogger *zap.Logger, cfg *
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.JwtAuth(redisDB, zapLogger, cfg))
 			r.Post("/logout", userHandler.LogoutHandler)
+		})
+	})
+	apiV1Router.Route("/post", func(r chi.Router) {
+		r.Get("/", postHandler.GetAllPostsHandler)
+		r.Get("/{id}", postHandler.GetPostHandler)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.JwtAuth(redisDB, zapLogger, cfg))
+			r.Post("/", postHandler.CreatePostHandler)
+			r.Put("/{id}", postHandler.UpdatePostHandler)
+			r.Delete("/{id}", postHandler.DeletePostHandler)
 		})
 	})
 	r.Mount("/api/v1", apiV1Router)

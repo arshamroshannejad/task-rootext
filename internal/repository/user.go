@@ -39,7 +39,7 @@ func (u *userRepositoryImpl) Create(user *entities.UserAuthRequest) error {
 	query := `INSERT INTO users (email, password) VALUES ($1, $2)`
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	args := []interface{}{user.Email, user.Password}
+	args := []any{user.Email, user.Password}
 	_, err := u.db.ExecContext(ctx, query, args...)
 	return err
 }
